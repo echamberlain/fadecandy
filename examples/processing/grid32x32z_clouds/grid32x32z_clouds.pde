@@ -3,18 +3,14 @@ float dx, dy;
 
 void setup()
 {
-  size(240, 80);
+  size(80, 80);
 
   // Connect to the local instance of fcserver. You can change this line to connect to another computer's fcserver
   opc = new OPC(this, "127.0.0.1", 7890);
 
-  // Map an 8x8 grid of LEDs to the center of the window, scaled to take up most of the space
+  // Map a 32x32 grid of LEDs to the center of the window, scaled to take up most of the space
   float spacing = height / 10.0;
-  opc.ledGrid8x8(0, width/2, height/2, spacing, 0, true);
-
-  // Put two more 8x8 grids to the left and to the right of that one.
-  opc.ledGrid8x8(64, width/2 - spacing * 8, height/2, spacing, 0, true);
-  opc.ledGrid8x8(128, width/2 + spacing * 8, height/2, spacing, 0, true);
+  opc.ledGrid(0, 32, 32, width * 1/2, height * 1/2, height/32, height/32, 0, false);
   
   // Make the status LED quiet
   opc.setStatusLed(false);
