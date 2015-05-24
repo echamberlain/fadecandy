@@ -21,7 +21,20 @@ CPPFLAGS += -Wno-strict-aliasing
 ###########################################################################
 # System Support
 
-UNAME := $(shell uname)
+SYS := $(shell $(CXX) -dumpmachine)
+
+ifneq (, $(findstring linux, $(SYS)))
+UNAME := Linux
+endif
+
+ifneq (, $(findstring mingw, $(SYS)))
+UNAME := MINGW32
+endif
+
+ifneq (, $(findstring darwin, $(SYS)))
+UNAME := Darwin
+endif
+
 MINGW := $(findstring MINGW32, $(UNAME))
 LIBS += -lstdc++ -lm
 VERSION := $(shell git describe --match "fcserver-*")
@@ -61,7 +74,7 @@ ifneq ("$(DEBUG)", "")
 	CPPFLAGS += -g -DDEBUG -DENABLE_LOGGING
 	PACK_CMD :=
 else
-	# Optimized build	
+	# Optimized build
 	STRIP_CMD := strip $(TARGET)
 	CPPFLAGS += -Os -DNDEBUG
 	LDFLAGS += -Os
@@ -169,9 +182,10 @@ CXXFLAGS += -felide-constructors -fno-exceptions -fno-rtti
 
 OBJS := $(CPP_FILES:.cpp=.o) $(C_FILES:.c=.o)
 
-all: $(TARGET)
+print-%: ; @echo $* = $($*)
+all: print-SYS $(TARGET)
 
-# FIXME: A race condition between objects regeneration and their source mtime in make ? 
+# FIXME: A race condition between objects regeneration and their source mtime in make ?
 $(TARGET): $(SUBMODULES_TARGETS) $(OBJS)
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 	$(STRIP_CMD)
@@ -186,7 +200,7 @@ src/httpdocs.cpp: http/* http/js/* http/css/*
 clean:
 	rm -f $(CLEAN_FILES) $(TARGET)
 
-# Git submodules handling. TODO: Add submodules cleaning to clean target 
+# Git submodules handling. TODO: Add submodules cleaning to clean target
 SUBMODULES_TARGETS:=$(shell git config -f ../.gitmodules --get-regexp submodule'.*\.'path|cut -d ' ' -f 2|cut -d '/' -f 2)
 $(SUBMODULES_TARGETS):
 	cd .. && git submodule update --init -- server/$@ && cd server/$@ && git checkout -f HEAD && git clean -dfx
