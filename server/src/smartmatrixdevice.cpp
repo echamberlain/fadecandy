@@ -68,10 +68,24 @@ SMDevice::SMDevice(libusb_device *device, bool verbose)
 
     // Framebuffer headers
     memset(mFramebuffer, 0, sizeof mFramebuffer);
-    for (unsigned i = 0; i < FRAMEBUFFER_PACKETS; ++i) {
-        mFramebuffer[i].control = TYPE_FRAMEBUFFER | i;
+
+    // send all bits of packet index past first 5 (in this case all zeros)
+    mFramebuffer[0].control = TYPE_EXPAND;
+    mFramebuffer[0].data[0] = 0;
+
+    for (unsigned i = 0; i < 0x20; ++i) {
+        mFramebuffer[i + 1].control = TYPE_FRAMEBUFFER | i;
     }
-    mFramebuffer[FRAMEBUFFER_PACKETS - 1].control |= FINAL;
+
+    // send all bits of packet index past first 5
+    mFramebuffer[0x20 + 1].control = TYPE_EXPAND;
+    mFramebuffer[0x20 + 1].data[0] = 0x20;
+
+    for (unsigned i = 0x20; i < FRAMEBUFFER_PACKETS; ++i) {
+        mFramebuffer[i + 2].control = TYPE_FRAMEBUFFER | (i & 0x1f);
+    }
+
+    mFramebuffer[FRAMEBUFFER_PACKETS - 1 + 2].control |= FINAL;
 
     // Color LUT headers
     memset(mColorLUT, 0, sizeof mColorLUT);

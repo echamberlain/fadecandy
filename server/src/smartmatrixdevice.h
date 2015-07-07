@@ -44,20 +44,23 @@ public:
     virtual void flush();
     virtual void describe(rapidjson::Value &object, Allocator &alloc);
 
-    static const unsigned NUM_PIXELS = 512;
+    static const unsigned NUM_PIXELS = 1024;
 
     // Send current buffer contents
     void writeFramebuffer();
 
     // Framebuffer accessor
     uint8_t *fbPixel(unsigned num) {
-        return &mFramebuffer[num / PIXELS_PER_PACKET].data[3 * (num % PIXELS_PER_PACKET)];
+        if(num / PIXELS_PER_PACKET >= 0x20)
+            return &mFramebuffer[num / PIXELS_PER_PACKET + 2].data[3 * (num % PIXELS_PER_PACKET)];
+        else
+            return &mFramebuffer[num / PIXELS_PER_PACKET + 1].data[3 * (num % PIXELS_PER_PACKET)];
     }
  
 private:
     static const unsigned PIXELS_PER_PACKET = 21;
     static const unsigned LUT_ENTRIES_PER_PACKET = 31;
-    static const unsigned FRAMEBUFFER_PACKETS = 25;
+    static const unsigned FRAMEBUFFER_PACKETS = (NUM_PIXELS/PIXELS_PER_PACKET) + (NUM_PIXELS%PIXELS_PER_PACKET ? 1 : 0);
     static const unsigned LUT_PACKETS = 25;
     static const unsigned LUT_ENTRIES = 257;
     static const unsigned OUT_ENDPOINT = 1;
@@ -66,6 +69,7 @@ private:
     static const uint8_t TYPE_FRAMEBUFFER = 0x00;
     static const uint8_t TYPE_LUT = 0x40;
     static const uint8_t TYPE_CONFIG = 0x80;
+    static const uint8_t TYPE_EXPAND = 0xC0;
     static const uint8_t FINAL = 0x20;
 
     static const uint8_t CFLAG_NO_DITHERING     = (1 << 0);
@@ -103,7 +107,7 @@ private:
     char mVersionString[10];
 
     libusb_device_descriptor mDD;
-    Packet mFramebuffer[FRAMEBUFFER_PACKETS];
+    Packet mFramebuffer[FRAMEBUFFER_PACKETS + 2];
     Packet mColorLUT[LUT_PACKETS];
     Packet mFirmwareConfig;
 
