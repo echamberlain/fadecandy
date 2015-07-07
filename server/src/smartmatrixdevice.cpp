@@ -57,7 +57,7 @@ SMDevice::Transfer::~Transfer()
 }
 
 SMDevice::SMDevice(libusb_device *device, bool verbose)
-    : USBDevice(device, "fadecandy", verbose),
+    : USBDevice(device, "smartmatrix", verbose),
       mConfigMap(0), mNumFramesPending(0), mFrameWaitingForSubmit(false)
 {
     mSerialBuffer[0] = '\0';
@@ -104,7 +104,7 @@ bool SMDevice::probe(libusb_device *device)
         return false;
     }
 
-    return dd.idVendor == 0x1d50 && dd.idProduct == 0x607a;
+    return dd.idVendor == 0x1d50 && dd.idProduct == 0x60bf;
 }
 
 int SMDevice::open()
@@ -680,7 +680,7 @@ void SMDevice::writeFirmwareConfiguration()
 std::string SMDevice::getName()
 {
     std::ostringstream s;
-    s << "Fadecandy";
+    s << "SmartMatrix";
     if (mSerialString[0]) {
         s << " (Serial# " << mSerialString << ", Version " << mVersionString << ")";
     }
