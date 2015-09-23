@@ -44,17 +44,14 @@ public:
     virtual void flush();
     virtual void describe(rapidjson::Value &object, Allocator &alloc);
 
-    static const unsigned NUM_PIXELS = 1024;
+    static const unsigned NUM_PIXELS = 2048;
 
     // Send current buffer contents
     void writeFramebuffer();
 
     // Framebuffer accessor
     uint8_t *fbPixel(unsigned num) {
-        if(num / PIXELS_PER_PACKET >= 0x20)
-            return &mFramebuffer[num / PIXELS_PER_PACKET + 2].data[3 * (num % PIXELS_PER_PACKET)];
-        else
-            return &mFramebuffer[num / PIXELS_PER_PACKET + 1].data[3 * (num % PIXELS_PER_PACKET)];
+        return &mFramebuffer[num / PIXELS_PER_PACKET + 1 + (num / PIXELS_PER_PACKET / 0x20)].data[3 * (num % PIXELS_PER_PACKET)];
     }
  
 private:
@@ -107,7 +104,7 @@ private:
     char mVersionString[10];
 
     libusb_device_descriptor mDD;
-    Packet mFramebuffer[FRAMEBUFFER_PACKETS + 2];
+    Packet mFramebuffer[FRAMEBUFFER_PACKETS + 1 + (NUM_PIXELS / PIXELS_PER_PACKET / 0x20)];
     Packet mColorLUT[LUT_PACKETS];
     Packet mFirmwareConfig;
 

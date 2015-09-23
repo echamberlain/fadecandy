@@ -60,6 +60,9 @@ SMDevice::SMDevice(libusb_device *device, bool verbose)
     : USBDevice(device, "smartmatrix", verbose),
       mConfigMap(0), mNumFramesPending(0), mFrameWaitingForSubmit(false)
 {
+    unsigned lowIndexCount = 0;
+    unsigned expandIndexCount = 0;
+
     mSerialBuffer[0] = '\0';
     mSerialString = mSerialBuffer;
 
@@ -69,23 +72,21 @@ SMDevice::SMDevice(libusb_device *device, bool verbose)
     // Framebuffer headers
     memset(mFramebuffer, 0, sizeof mFramebuffer);
 
-    // send all bits of packet index past first 5 (in this case all zeros)
-    mFramebuffer[0].control = TYPE_EXPAND;
-    mFramebuffer[0].data[0] = 0;
+    for(unsigned i = 0; i < FRAMEBUFFER_PACKETS; ++i) {
+        // send all bits of packet index past first 5
+        if (lowIndexCount % 0x20 == 0) {
+            mFramebuffer[expandIndexCount * (0x20 + 1)].control = TYPE_EXPAND;
+            mFramebuffer[expandIndexCount * (0x20 + 1)].data[0] = 0x20 * expandIndexCount;
+            expandIndexCount++;
+            lowIndexCount = 0;
+        }
 
-    for (unsigned i = 0; i < 0x20; ++i) {
-        mFramebuffer[i + 1].control = TYPE_FRAMEBUFFER | i;
+        // send just first 5 bits of packet index
+        mFramebuffer[(expandIndexCount-1) * (0x20 + 1) + 1 + lowIndexCount].control = TYPE_FRAMEBUFFER | lowIndexCount;
+        lowIndexCount++;
     }
 
-    // send all bits of packet index past first 5
-    mFramebuffer[0x20 + 1].control = TYPE_EXPAND;
-    mFramebuffer[0x20 + 1].data[0] = 0x20;
-
-    for (unsigned i = 0x20; i < FRAMEBUFFER_PACKETS; ++i) {
-        mFramebuffer[i + 2].control = TYPE_FRAMEBUFFER | (i & 0x1f);
-    }
-
-    mFramebuffer[FRAMEBUFFER_PACKETS - 1 + 2].control |= FINAL;
+    mFramebuffer[FRAMEBUFFER_PACKETS - 1 + (NUM_PIXELS / PIXELS_PER_PACKET / 0x20)].control |= FINAL;
 
     // Color LUT headers
     memset(mColorLUT, 0, sizeof mColorLUT);
