@@ -1,3 +1,16 @@
+This repo has a new device class added to the server to add support for driving a SmartMatrix display.  A new "smartmatrix" device is created, see /examples/config/smartmatrix*.json for examples of using the server.  The "smartmatrix" device is nearly identical to the "fadecandy" device, with unique USB IDs, and an additional USB message "TYPE_EXPAND" that sends the high bits of packet index to allow expanding beyond 32 packets per frame (32x21 pixels gives a limit of 672 pixels).  The server modifications don't affect the "fadecandy" device, so this server should be able to drive "fadecandy" devices as before, and you should be able to combine "smartmatrix" and "fadecandy" devices (untested as of yet).
+
+SmartMatrix can support driving more pixels per device than Fadecandy (it's based on the Teensy 3.1 not 3.0 with more memory and CPU speed, and uses a different type of LED panel).  The server is configured to send 2048 pixels - enough for a 32x64 pixel panel - per frame.  You may get better performance by changing NUM_PIXELS in /server/src/smartmatrixdevice.h to the number of pixels in your panel.
+
+The SmartMatrix_Fadecandy firmware is stored in a separate repo: https://github.com/pixelmatix/SmartMatrix_fadecandy
+
+There are several Processing examples updated for running on SmartMatrix: /examples/processing/smartmatrix*
+You should use ledGrid() with these parameters for driving a SmartMatrix device:  
+stripLength = SmartMatrix panel width  
+numStrips = SmartMatrix panel height
+
+
+
 ![Fadecandy Title](https://raw.github.com/scanlime/fadecandy/master/doc/images/fc-title.png)
 
 Fadecandy is a project that makes LED art easier, tastier, and more creative. We're all about creating tools that remove the technical drudgery from making LED art, freeing you to do more interesting, nuanced, and creative things. We think LEDs are more than just trendy display devices, we think of them as programmable light for interactive art.
